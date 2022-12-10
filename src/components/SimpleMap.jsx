@@ -5,7 +5,8 @@ import {
   Polyline,
 } from "@react-google-maps/api";
 import React, { useEffect, useState } from "react";
-
+import bus from "../assets/bus.png";
+import SmartInfoWindow from "./SmartInfoWindow";
 //  center on current location onload
 //v 1. make a map with a marker
 //  3. make a map with a marker and a info window and a button
@@ -15,11 +16,6 @@ import React, { useEffect, useState } from "react";
 const containerStyle = {
   width: "100vw",
   height: "100vh",
-};
-
-const center = {
-  lat: 43.6532,
-  lng: -79.3832,
 };
 
 const markerMap = [
@@ -34,12 +30,12 @@ const markerMap = [
 
 const polylinePath = [
   {
-    lat: 43.6532,
-    lng: -79.3832,
+    lat: 43.64928,
+    lng: -79.371398,
   },
-  { lat: 43.32, lng: -79 },
-  { lat: 43.532, lng: -79.3532 },
-  { lat: 43.12, lng: -79.42 },
+  { lat: 43.651454, lng: -79.372342 },
+  { lat: 43.657266, lng: -79.353385 },
+  { lat: 43.669869, lng: -79.357719 },
 ];
 
 const polylineOptions = {
@@ -56,18 +52,18 @@ const polylineOptions = {
   zIndex: 1,
 };
 
-const YOUR_API_KEY = "enter API key here";
+const YOUR_API_KEY = "AIzaSyBQEmFLvm4h3KQH-oGLIogeiMKuJcEiB3c";
 
 export default function SimpleMap() {
-  const [currentLocation, setCurrentLocation] = useState(null);
-  console.log(currentLocation);
+  const [currentLocation, setCurrentLocation] = useState({});
+  const [open, setOpen] = useState(false);
+
   const success = (position) => {
     const lat = position.coords.latitude;
     const lng = position.coords.longitude;
-    console.log(lat, lng);
-    setCurrentLocation({ lat, lng });
+    setCurrentLocation({ id: 1, position: { lat, lng } });
   };
-
+  console.log(open);
   const error = () => {
     console.log("error");
   };
@@ -76,22 +72,51 @@ export default function SimpleMap() {
     navigator.geolocation.getCurrentPosition(success, error);
   }, []);
 
-  return (
-    <LoadScript googleMapsApiKey={YOUR_API_KEY}>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={currentLocation}
-        zoom={10}
-      >
-        {markerMap &&
-          markerMap.map((marker, _) => {
-            return <Marker position={marker} clickable />;
-          })}
+  const handleClick = () => {
+    for (let i = 0; i < polylinePath.length; i++) {
+      setTimeout(() => {
+        setCurrentLocation(polylinePath[i]);
+      }, 1500 * i);
+    }
+  };
 
-        {polylinePath && (
-          <Polyline path={polylinePath} options={polylineOptions} />
-        )}
-      </GoogleMap>
-    </LoadScript>
+  return (
+    <>
+      <button onClick={handleClick}>Click to start</button>
+      <LoadScript googleMapsApiKey={YOUR_API_KEY}>
+        <GoogleMap
+          mapContainerStyle={containerStyle}
+          center={currentLocation.position}
+          zoom={10}
+        >
+          {currentLocation && (
+            <Marker
+              position={currentLocation.position}
+              icon={bus}
+              onClick={() => setOpen(true)}
+            >
+              {currentLocation && (
+                <SmartInfoWindow
+                  open={open}
+                  position={currentLocation}
+                  onCloseClick={() => setOpen(false)}
+                >
+                  <div>Hello</div>
+                </SmartInfoWindow>
+              )}
+            </Marker>
+          )}
+
+          {markerMap &&
+            markerMap.map((marker, _) => {
+              return <Marker position={marker} clickable />;
+            })}
+
+          {polylinePath && (
+            <Polyline path={polylinePath} options={polylineOptions} />
+          )}
+        </GoogleMap>
+      </LoadScript>
+    </>
   );
 }
